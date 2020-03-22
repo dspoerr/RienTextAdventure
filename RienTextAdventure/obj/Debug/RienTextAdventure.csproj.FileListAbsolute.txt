@@ -1,0 +1,6 @@
+C:\Users\FGHY\Desktop\RienTextAdventure\RienTextAdventure\bin\Debug\RienTextAdventure.exe.config
+C:\Users\FGHY\Desktop\RienTextAdventure\RienTextAdventure\bin\Debug\RienTextAdventure.exe
+C:\Users\FGHY\Desktop\RienTextAdventure\RienTextAdventure\bin\Debug\RienTextAdventure.pdb
+C:\Users\FGHY\Desktop\RienTextAdventure\RienTextAdventure\obj\Debug\RienTextAdventure.csprojResolveAssemblyReference.cache
+C:\Users\FGHY\Desktop\RienTextAdventure\RienTextAdventure\obj\Debug\RienTextAdventure.exe
+C:\Users\FGHY\Desktop\RienTextAdventure\RienTextAdventure\obj\Debug\RienTextAdventure.pdb
