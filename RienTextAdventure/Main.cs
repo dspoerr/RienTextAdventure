@@ -1,172 +1,140 @@
 ﻿using System;
-using DecisionTree;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-/*
- * The goal of this class is to pack locations & decision trees
- * into modules. Location will remember if the place is altered
- * and store all relevant player actions. Location will parse out
- * Choices information and send it to the player.
- */
-
-
-// TO DO:
-// Increase functionality of the moment
-// it records time, but it should have an interval. 
-// Does the prompt it leads to occur only at the time, greater than, or less than, etc?
-// Basically, use this as a way to script events
-// i.e Ashe's turn 5 arrival at the bedroom, and it only occurs at turn 5
-// but ashe's turn 4 arrive at the living area, only occurs at turn 4
-// make sure to have a check in the TakeAction to check whether the next prompt should be scripted or not
-public class Moment
+namespace RienTextAdventure
 {
-   public Moment(int aNum, int iID, int pID, int dID)
+   class MainLoop
    {
-      int atActionNumber = aNum; // what action # the moment occured at
-      int interactableID = iID;  // what interactable the decision occured with
-      int promptID = pID;        // what prompt the decision occured on
-      int decisionID = dID;      // what decision was chosen
+      // TO DO:
+      // Create Setup section, parse JSON files in and assign them to objects
+
+      // As defined in Intro, p => player
+      String pName, pRace,
+         pHome, pHomeRep,
+         pProfession;
+
+      // TO DO:
+      // Lock screen size of console?
+
+      // Creates the general object for each location the player will visit
+
+      // TO DO:
+      // JSON parse
+      // basically, parse location, then parse interactable ID, then do the decisions.
+      // make an if statement with a loop so you can pass the interactable into the function
+      // should be able to quickly gen the JSON file as well
+      //
+      // Add an autosave feature, preventing the person from undoing what they just did
+      // Maybe even catch if they do this
+      // Also saves progress
+
+      static void Main(string[] args)
+      {
+         // TO DO:
+         // Read this value in from save file   
+         int actionCounter = 0;
+
+         // keeps track of all locations available
+         List<Location> locations = new List<Location>();
+
+         // tracks the ID of the current loc
+         // TO DO:
+         // read in from save file
+         int currentLoc = 1;
+         int newPrompt = 0;
+
+         // temp storage
+         // [0] returns action # for the counter
+         // [1] returns the location ID
+         int[] takeAction = new int[] { -1, -1, -1 };
+         Console.WriteLine("hello");
+
+         int[] changeLoc1 = new int[] { 2, 0 };
+         int[] changeLoc2 = new int[] { 1, 0 };
+
+         // demo setup
+         Location demo = new Location("demo", 1);
+         locations.Add(demo);
+         demo.options.NewInteractable(0, "int1");
+         demo.options.AddDecision(demo.options.interactables[0], 0, "LOOKS LIKE YOU'RE STUCK!!", 100, 1);
+         demo.options.AddDecision(demo.options.interactables[0], 10, "option 1 :)", 100, 1);
+         demo.options.AddDecision(demo.options.interactables[0], 11, "option 2!!", 101, 1);
+         demo.options.AddDecision(demo.options.interactables[0], 12, "option 3 :O", 102, changeLoc1);
+
+
+
+         int[] ids = { 10, 11, 12 };
+         demo.options.AddPrompt(demo.options.interactables[0], 0, "THIS IS THE PROMPT >:)", ids);
+
+         int[] idsnew = { 0, 0 };
+         demo.options.AddPrompt(demo.options.interactables[0], 100, "haha you lose!", idsnew);
+         demo.options.AddPrompt(demo.options.interactables[0], 101, "oops, we have stalemate", idsnew);
+         demo.options.AddPrompt(demo.options.interactables[0], 103, "victoly :(", idsnew);
+
+         // demo2 setup
+         Location demo2 = new Location("demo2", 2);
+         locations.Add(demo2);
+         demo2.options.NewInteractable(0, "int1");
+         demo2.options.AddDecision(demo2.options.interactables[0], 0, "this is the second demo", 100, 1);
+         demo2.options.AddDecision(demo2.options.interactables[0], 10, "1 looks familiar)", 100, 1);
+         demo2.options.AddDecision(demo2.options.interactables[0], 11, "2 birds", 101, 1);
+         demo2.options.AddDecision(demo2.options.interactables[0], 12, "3 go back", 103, changeLoc2);
+
+         demo2.options.AddPrompt(demo2.options.interactables[0], 0, "demo 2 prompt", ids);
+
+         int[] idsnew2 = { 0, 0 };
+         demo2.options.AddPrompt(demo2.options.interactables[0], 100, "waaa ", idsnew);
+         demo2.options.AddPrompt(demo2.options.interactables[0], 101, "grrrr", idsnew);
+         demo2.options.AddPrompt(demo2.options.interactables[0], 103, "vfdsfdsf :(", idsnew);
+
+
+         String input = "";
+         // Main Game Loop
+         while (true)
+         {
+
+            // Intro
+            // Here, people will choose their name
+            // They'll also pick race, which determines how friendly people will be towards them
+            // Eventually they'll choose class, but by default it will be warrior.
+            // Determine home town & its reputation. If none, will be bad by default
+
+            // Most importantly, players will choose their profession. This determines their starting point
+            // and all starting characters, as well as how the world will perceive them.
+            // Professions may include: merchant, mercenary, innkeeper
+
+            // TO DO:
+            // Restrict input to only available values on screen
+
+            // loops to verify correct location
+            foreach (Location l in locations)
+            {
+               if (l.locID != currentLoc) { continue; }
+               else
+               {
+                  if (takeAction[1] != -1)
+                  {
+                     l.setPrompt(newPrompt);
+                  }
+                  l.ReadPrompt();
+                  input = Console.ReadLine();
+                  takeAction = l.TakeAction(Int32.Parse(input), actionCounter);
+                  actionCounter = actionCounter + takeAction[0];
+
+                  // if takeAction[1] != 1, decision made was a leave action
+                  // directs to the new location for next loop
+                  if (takeAction[1] != -1)
+                  {
+                     currentLoc = takeAction[1];
+                     newPrompt = takeAction[2];
+                  }
+                  break; // location found, no need to keep going
+               }
+            } // End of foreach
+         } // end of game loop
+      } // end of main
    }
 }
-
-public class Location
-{
-
-   // checks if the player has made any changes to the area
-   protected bool isUnaltered = true;
-   protected List<Moment> history = new List<Moment>(); // all moments created
-   protected int currentPrompt;
-   public String locName;
-   public int locID;
-
-   public Choices options = new Choices();  // methods for storing decision information
-
-   public Location(String name, int id)
-   {
-      locName = name;
-      locID = id;
-   }
-
-
-   // Stores the current action to the location's history
-   // Additionally, changes the current prompt & calls ReadPrompt
-   // TO DO:
-   // Add a function for searching for prompts/decisions to increase readability
-   // Allow for outside factors to influence choices (such as character's rep/demeanor)
-   // interactable disposition
-
-   // TO DO:
-   // possibly 
-
-   public int[] TakeAction(int dID, int actions)
-   {
-      bool isFound = false;
-      int aNum = actions, iID = 0, pID = 0;  // for creating the moment
-
-      // [0] returns action number for the incrementer
-      // [1] returns location ID 
-      // [2] returns prompt ID
-      int[] actionAndLocValue = new int[] { 0, -1, -1 };
-
-      // Find all information associated with the decision
-      foreach (Interactable i in options.interactables)
-      {
-         foreach (Decision d in i.decisions)
-         {
-            // creates the moment and sets the new prompt to go to
-            if (d.decisionID == dID && d.isLeavingArea[0] == -1 && d.isLeavingInteractable == -1)
-            {
-               aNum = d.actionCount;
-               actionAndLocValue[0] = d.actionCount;
-               iID = i.interactableID;
-               pID = currentPrompt;
-               currentPrompt = d.leadsToPromptID;
-               isFound = true;
-
-            }
-            // Not leaving area, so does not affect return variable
-            else if (d.isLeavingArea[0] == -1 & d.isLeavingInteractable != -1)
-            {
-               aNum = d.actionCount;
-               actionAndLocValue[0] = d.actionCount;
-               iID = i.interactableID;
-               pID = currentPrompt;
-               isFound = true;
-            }
-            // Is leaving area, so changes the return variable to the ID of new location
-            else if (d.isLeavingInteractable == -1 & d.isLeavingArea[0] != -1)
-            {
-               aNum = d.actionCount;
-               actionAndLocValue[0] = d.actionCount;
-               iID = i.interactableID;
-               actionAndLocValue[1] = d.isLeavingArea[0];
-               actionAndLocValue[2] = d.isLeavingArea[1];
-               isFound = true;
-            }
-            if (isFound) { break; }
-         }
-         if (isFound) { break; }
-      }
-
-      Moment m = new Moment(aNum, iID, pID, dID);
-
-      history.Add(m);
-      if (isUnaltered) { isUnaltered = false; }
-
-      return actionAndLocValue;
-   } // end method TakeAction
-
-
-   // uses curent prompt ID to find the right prompt to output
-   // additionally parses and reads out the related decisions
-   public void ReadPrompt()
-   {
-      String findPrompt = "Default Prompt. Please report bug! :)";   // current prompt text
-      int[] findDIDs = { };                         // decision IDs
-      bool isFound = false;
-
-      foreach (Interactable i in options.interactables)
-      {
-         foreach (Prompt p in i.prompts)
-         {
-            if (p.promptID == currentPrompt)
-            {
-               findPrompt = p.promptText;
-               findDIDs = p.decisionIDs;
-               isFound = true;
-               break;
-            }
-         }
-         if (isFound) { isFound = false; break; }
-      }
-      Console.WriteLine(findPrompt);
-
-      // print all decisions as such:
-      // decisionID: decisionText
-      // player will enter the decisionID to make their choice
-
-
-      foreach (int id in findDIDs)
-      {
-         foreach (Interactable i in options.interactables)
-         {
-            foreach (Decision d in i.decisions)
-            {
-               if (d.decisionID == id)
-               {
-                  Console.WriteLine(id + ": " + d.decisionText);
-                  isFound = true;
-                  break;
-               }
-            }
-            if (isFound) { isFound = false; break; }
-         }
-      }
-   } // end method ReadPrompt
-
-   public void setPrompt(int pID)
-   {
-      currentPrompt = pID;
-   }
-
-} // end class Location

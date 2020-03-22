@@ -1,166 +1,172 @@
 ﻿using System;
+using DecisionTree;
 using System.Collections.Generic;
 
+/*
+ * The goal of this class is to pack locations & decision trees
+ * into modules. Location will remember if the place is altered
+ * and store all relevant player actions. Location will parse out
+ * Choices information and send it to the player.
+ */
 
-/* 
- * A subset of the overall location object, this class
- * has several functions to store decision tree choices 
- * along with accompanying text. Choices will store all
- * interactable objects and NPCs  
-*/
 
-namespace DecisionTree
+// TO DO:
+// Increase functionality of the moment
+// it records time, but it should have an interval. 
+// Does the prompt it leads to occur only at the time, greater than, or less than, etc?
+// Basically, use this as a way to script events
+// i.e Ashe's turn 5 arrival at the bedroom, and it only occurs at turn 5
+// but ashe's turn 4 arrive at the living area, only occurs at turn 4
+// make sure to have a check in the TakeAction to check whether the next prompt should be scripted or not
+public class Moment
 {
-   // container for prompts
-   public struct Prompt
+   public Moment(int aNum, int iID, int pID, int dID)
    {
-      public int promptID;
-      public String promptText;
-      public int[] decisionIDs; // holds which decisions go with this promp
-
-      public Prompt(int pID, String pText, int[] dIDs)
-      {
-         promptID = pID;
-         promptText = pText;
-         decisionIDs = dIDs;
-      }
-
-   }
-
-   // container for decisions
-   // TO DO:
-   // Add a variable for "isLeavingArea" and "IsLeavingInteractable" or something
-   // This way, the decision can prompt whether there should be a change of scene or area
-   // without hardcoding it
-
-   //TO DO:
-   // possible add a flag to track whether the decision was checked or not. may be good
-   // in the future to check conditional things like if x decision was made, script event y
-   public struct Decision
-   {
-      public int decisionID;
-      public String decisionText;
-      public int leadsToPromptID; // dictates which promptID this goes to
-      public int actionCount;     // how many actions does this take up for the player, default 1
-      // dictates whether the decision changes the Location object, 
-      // nonnegative vals dictate new location object and new prompt to go to respectively
-      public int[] isLeavingArea;
-      //dictates whether the decision changes the interactable, nonnegative value is the prompt it points to
-      public int isLeavingInteractable;
-
-      // most common and simplified decision, leads to a new prompt, default 1 action
-      public Decision(int dID, String dText, int ltpid)
-      {
-         decisionID = dID;
-         decisionText = dText;
-         leadsToPromptID = ltpid;
-         actionCount = 1; // default
-         isLeavingInteractable = -1;
-         isLeavingArea = new int[] { -1, -1 };
-      }
-
-      // most common and simplified decision, leads to a new prompt, nondefault actioncount
-      public Decision(int dID, String dText, int ltpid, int aCount)
-      {
-         decisionID = dID;
-         decisionText = dText;
-         leadsToPromptID = ltpid;
-         actionCount = aCount;
-         actionCount = 1; // default
-         isLeavingInteractable = -1;
-         isLeavingArea = new int[] { -1, -1 };
-      }
-
-      // specifies the decision is leaving an interactable
-      public Decision(int dID, String dText, int ltpid, int aCount, int leavingI)
-      {
-         decisionID = dID;
-         decisionText = dText;
-         leadsToPromptID = ltpid; //not used. TO DO: clean this up
-         actionCount = aCount;
-         isLeavingInteractable = leavingI;
-         isLeavingArea = new int[] { -1, -1 };
-      }
-
-      // specifies the decision is leaving an area
-      public Decision(int dID, String dText, int aCount, int[] leavingA)
-      {
-         decisionID = dID;
-         decisionText = dText;
-         leadsToPromptID = -1;
-         actionCount = aCount;
-         isLeavingArea = leavingA;
-         isLeavingInteractable = -1;
-      }
-   }
-
-   // container for an interactable
-   public class Interactable
-   {
-      public int interactableID;
-      String interactableName;
-      public List<Decision> decisions = new List<Decision>();
-      public List<Prompt> prompts = new List<Prompt>();
-
-
-      public Interactable(int iID, String iName)
-      {
-         interactableID = iID;
-         interactableName = iName;
-      }
-   }
-
-
-   public class Choices
-   {
-      // global array holding all interactables
-      public List<Interactable> interactables = new List<Interactable>();
-
-      public Choices()
-      {
-      }
-
-
-      // Adds a new interactable object to the interactables array.
-      public void NewInteractable(int iID, String name)
-      {
-         Interactable i = new Interactable(iID, name);
-         interactables.Add(i);
-      }
-
-      // most common and simplified decision, leads to a new prompt, default 1 action
-      public void AddDecision(Interactable i, int dID, String dText, int ltpid)
-      {
-         Decision d = new Decision(dID, dText, ltpid);
-         i.decisions.Add(d);
-      }
-
-      // most common and simplified decision, leads to a new prompt, nondefault actioncount
-      public void AddDecision(Interactable i, int dID, String dText, int leadsTo, int aCount)
-      {
-         Decision d = new Decision(dID, dText, leadsTo, aCount);
-         i.decisions.Add(d);
-      }
-
-      // specifies the decision is leaving an interactable
-      public void AddDecision(Interactable i, int dID, String dText, int ltpid, int aCount, int leavingI)
-      {
-         Decision d = new Decision(dID, dText, aCount, leavingI);
-         i.decisions.Add(d);
-      }
-
-      // specifies the decision is leaving an area
-      public void AddDecision(Interactable i, int dID, String dText, int aCount, int[] leavingA)
-      {
-         Decision d = new Decision(dID, dText, aCount, leavingA);
-         i.decisions.Add(d);
-      }
-
-      // assigns a prompt to the promp array of the apt interactable
-      public void AddPrompt(Interactable i, int pID, String pText, int[] dIDs)
-      {
-         Prompt p = new Prompt(pID, pText, dIDs);
-         i.prompts.Add(p);
-      }
+      int atActionNumber = aNum; // what action # the moment occured at
+      int interactableID = iID;  // what interactable the decision occured with
+      int promptID = pID;        // what prompt the decision occured on
+      int decisionID = dID;      // what decision was chosen
    }
 }
+
+public class Location
+{
+
+   // checks if the player has made any changes to the area
+   protected bool isUnaltered = true;
+   protected List<Moment> history = new List<Moment>(); // all moments created
+   protected int currentPrompt;
+   public String locName;
+   public int locID;
+
+   public Choices options = new Choices();  // methods for storing decision information
+
+   public Location(String name, int id)
+   {
+      locName = name;
+      locID = id;
+   }
+
+
+   // Stores the current action to the location's history
+   // Additionally, changes the current prompt & calls ReadPrompt
+   // TO DO:
+   // Add a function for searching for prompts/decisions to increase readability
+   // Allow for outside factors to influence choices (such as character's rep/demeanor)
+   // interactable disposition
+
+   // TO DO:
+   // possibly 
+
+   public int[] TakeAction(int dID, int actions)
+   {
+      bool isFound = false;
+      int aNum = actions, iID = 0, pID = 0;  // for creating the moment
+
+      // [0] returns action number for the incrementer
+      // [1] returns location ID 
+      // [2] returns prompt ID
+      int[] actionAndLocValue = new int[] { 0, -1, -1 };
+
+      // Find all information associated with the decision
+      foreach (Interactable i in options.interactables)
+      {
+         foreach (Decision d in i.decisions)
+         {
+            // creates the moment and sets the new prompt to go to
+            if (d.decisionID == dID && d.isLeavingArea[0] == -1 && d.isLeavingInteractable == -1)
+            {
+               aNum = d.actionCount;
+               actionAndLocValue[0] = d.actionCount;
+               iID = i.interactableID;
+               pID = currentPrompt;
+               currentPrompt = d.leadsToPromptID;
+               isFound = true;
+
+            }
+            // Not leaving area, so does not affect return variable
+            else if (d.isLeavingArea[0] == -1 & d.isLeavingInteractable != -1)
+            {
+               aNum = d.actionCount;
+               actionAndLocValue[0] = d.actionCount;
+               iID = i.interactableID;
+               pID = currentPrompt;
+               isFound = true;
+            }
+            // Is leaving area, so changes the return variable to the ID of new location
+            else if (d.isLeavingInteractable == -1 & d.isLeavingArea[0] != -1)
+            {
+               aNum = d.actionCount;
+               actionAndLocValue[0] = d.actionCount;
+               iID = i.interactableID;
+               actionAndLocValue[1] = d.isLeavingArea[0];
+               actionAndLocValue[2] = d.isLeavingArea[1];
+               isFound = true;
+            }
+            if (isFound) { break; }
+         }
+         if (isFound) { break; }
+      }
+
+      Moment m = new Moment(aNum, iID, pID, dID);
+
+      history.Add(m);
+      if (isUnaltered) { isUnaltered = false; }
+
+      return actionAndLocValue;
+   } // end method TakeAction
+
+
+   // uses curent prompt ID to find the right prompt to output
+   // additionally parses and reads out the related decisions
+   public void ReadPrompt()
+   {
+      String findPrompt = "Default Prompt. Please report bug! :)";   // current prompt text
+      int[] findDIDs = { };                         // decision IDs
+      bool isFound = false;
+
+      foreach (Interactable i in options.interactables)
+      {
+         foreach (Prompt p in i.prompts)
+         {
+            if (p.promptID == currentPrompt)
+            {
+               findPrompt = p.promptText;
+               findDIDs = p.decisionIDs;
+               isFound = true;
+               break;
+            }
+         }
+         if (isFound) { isFound = false; break; }
+      }
+      Console.WriteLine(findPrompt);
+
+      // print all decisions as such:
+      // decisionID: decisionText
+      // player will enter the decisionID to make their choice
+
+
+      foreach (int id in findDIDs)
+      {
+         foreach (Interactable i in options.interactables)
+         {
+            foreach (Decision d in i.decisions)
+            {
+               if (d.decisionID == id)
+               {
+                  Console.WriteLine(id + ": " + d.decisionText);
+                  isFound = true;
+                  break;
+               }
+            }
+            if (isFound) { isFound = false; break; }
+         }
+      }
+   } // end method ReadPrompt
+
+   public void setPrompt(int pID)
+   {
+      currentPrompt = pID;
+   }
+
+} // end class Location

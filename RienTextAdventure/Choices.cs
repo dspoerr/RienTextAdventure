@@ -1,140 +1,166 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace RienTextAdventure
+
+/* 
+ * A subset of the overall location object, this class
+ * has several functions to store decision tree choices 
+ * along with accompanying text. Choices will store all
+ * interactable objects and NPCs  
+*/
+
+namespace DecisionTree
 {
-   class MainLoop
+   // container for prompts
+   public struct Prompt
    {
-      // TO DO:
-      // Create Setup section, parse JSON files in and assign them to objects
+      public int promptID;
+      public String promptText;
+      public int[] decisionIDs; // holds which decisions go with this promp
 
-      // As defined in Intro, p => player
-      String pName, pRace,
-         pHome, pHomeRep,
-         pProfession;
-
-      // TO DO:
-      // Lock screen size of console?
-
-      // Creates the general object for each location the player will visit
-
-      // TO DO:
-      // JSON parse
-      // basically, parse location, then parse interactable ID, then do the decisions.
-      // make an if statement with a loop so you can pass the interactable into the function
-      // should be able to quickly gen the JSON file as well
-      //
-      // Add an autosave feature, preventing the person from undoing what they just did
-      // Maybe even catch if they do this
-      // Also saves progress
-
-      static void Main(string[] args)
+      public Prompt(int pID, String pText, int[] dIDs)
       {
-         // TO DO:
-         // Read this value in from save file   
-         int actionCounter = 0;
+         promptID = pID;
+         promptText = pText;
+         decisionIDs = dIDs;
+      }
 
-         // keeps track of all locations available
-         List<Location> locations = new List<Location>();
+   }
 
-         // tracks the ID of the current loc
-         // TO DO:
-         // read in from save file
-         int currentLoc = 1;
-         int newPrompt = 0;
+   // container for decisions
+   // TO DO:
+   // Add a variable for "isLeavingArea" and "IsLeavingInteractable" or something
+   // This way, the decision can prompt whether there should be a change of scene or area
+   // without hardcoding it
 
-         // temp storage
-         // [0] returns action # for the counter
-         // [1] returns the location ID
-         int[] takeAction = new int[] { -1, -1, -1 };
-         Console.WriteLine("hello");
+   //TO DO:
+   // possible add a flag to track whether the decision was checked or not. may be good
+   // in the future to check conditional things like if x decision was made, script event y
+   public struct Decision
+   {
+      public int decisionID;
+      public String decisionText;
+      public int leadsToPromptID; // dictates which promptID this goes to
+      public int actionCount;     // how many actions does this take up for the player, default 1
+      // dictates whether the decision changes the Location object, 
+      // nonnegative vals dictate new location object and new prompt to go to respectively
+      public int[] isLeavingArea;
+      //dictates whether the decision changes the interactable, nonnegative value is the prompt it points to
+      public int isLeavingInteractable;
 
-         int[] changeLoc1 = new int[] { 2, 0 };
-         int[] changeLoc2 = new int[] { 1, 0 };
+      // most common and simplified decision, leads to a new prompt, default 1 action
+      public Decision(int dID, String dText, int ltpid)
+      {
+         decisionID = dID;
+         decisionText = dText;
+         leadsToPromptID = ltpid;
+         actionCount = 1; // default
+         isLeavingInteractable = -1;
+         isLeavingArea = new int[] { -1, -1 };
+      }
 
-         // demo setup
-         Location demo = new Location("demo", 1);
-         locations.Add(demo);
-         demo.options.NewInteractable(0, "int1");
-         demo.options.AddDecision(demo.options.interactables[0], 0, "LOOKS LIKE YOU'RE STUCK!!", 100, 1);
-         demo.options.AddDecision(demo.options.interactables[0], 10, "option 1 :)", 100, 1);
-         demo.options.AddDecision(demo.options.interactables[0], 11, "option 2!!", 101, 1);
-         demo.options.AddDecision(demo.options.interactables[0], 12, "option 3 :O", 102, changeLoc1);
+      // most common and simplified decision, leads to a new prompt, nondefault actioncount
+      public Decision(int dID, String dText, int ltpid, int aCount)
+      {
+         decisionID = dID;
+         decisionText = dText;
+         leadsToPromptID = ltpid;
+         actionCount = aCount;
+         actionCount = 1; // default
+         isLeavingInteractable = -1;
+         isLeavingArea = new int[] { -1, -1 };
+      }
+
+      // specifies the decision is leaving an interactable
+      public Decision(int dID, String dText, int ltpid, int aCount, int leavingI)
+      {
+         decisionID = dID;
+         decisionText = dText;
+         leadsToPromptID = ltpid; //not used. TO DO: clean this up
+         actionCount = aCount;
+         isLeavingInteractable = leavingI;
+         isLeavingArea = new int[] { -1, -1 };
+      }
+
+      // specifies the decision is leaving an area
+      public Decision(int dID, String dText, int aCount, int[] leavingA)
+      {
+         decisionID = dID;
+         decisionText = dText;
+         leadsToPromptID = -1;
+         actionCount = aCount;
+         isLeavingArea = leavingA;
+         isLeavingInteractable = -1;
+      }
+   }
+
+   // container for an interactable
+   public class Interactable
+   {
+      public int interactableID;
+      String interactableName;
+      public List<Decision> decisions = new List<Decision>();
+      public List<Prompt> prompts = new List<Prompt>();
 
 
-
-         int[] ids = { 10, 11, 12 };
-         demo.options.AddPrompt(demo.options.interactables[0], 0, "THIS IS THE PROMPT >:)", ids);
-
-         int[] idsnew = { 0, 0 };
-         demo.options.AddPrompt(demo.options.interactables[0], 100, "haha you lose!", idsnew);
-         demo.options.AddPrompt(demo.options.interactables[0], 101, "oops, we have stalemate", idsnew);
-         demo.options.AddPrompt(demo.options.interactables[0], 103, "victoly :(", idsnew);
-
-         // demo2 setup
-         Location demo2 = new Location("demo2", 2);
-         locations.Add(demo2);
-         demo2.options.NewInteractable(0, "int1");
-         demo2.options.AddDecision(demo2.options.interactables[0], 0, "this is the second demo", 100, 1);
-         demo2.options.AddDecision(demo2.options.interactables[0], 10, "1 looks familiar)", 100, 1);
-         demo2.options.AddDecision(demo2.options.interactables[0], 11, "2 birds", 101, 1);
-         demo2.options.AddDecision(demo2.options.interactables[0], 12, "3 go back", 103, changeLoc2);
-
-         demo2.options.AddPrompt(demo2.options.interactables[0], 0, "demo 2 prompt", ids);
-
-         int[] idsnew2 = { 0, 0 };
-         demo2.options.AddPrompt(demo2.options.interactables[0], 100, "waaa ", idsnew);
-         demo2.options.AddPrompt(demo2.options.interactables[0], 101, "grrrr", idsnew);
-         demo2.options.AddPrompt(demo2.options.interactables[0], 103, "vfdsfdsf :(", idsnew);
+      public Interactable(int iID, String iName)
+      {
+         interactableID = iID;
+         interactableName = iName;
+      }
+   }
 
 
-         String input = "";
-         // Main Game Loop
-         while (true)
-         {
+   public class Choices
+   {
+      // global array holding all interactables
+      public List<Interactable> interactables = new List<Interactable>();
 
-            // Intro
-            // Here, people will choose their name
-            // They'll also pick race, which determines how friendly people will be towards them
-            // Eventually they'll choose class, but by default it will be warrior.
-            // Determine home town & its reputation. If none, will be bad by default
+      public Choices()
+      {
+      }
 
-            // Most importantly, players will choose their profession. This determines their starting point
-            // and all starting characters, as well as how the world will perceive them.
-            // Professions may include: merchant, mercenary, innkeeper
 
-            // TO DO:
-            // Restrict input to only available values on screen
+      // Adds a new interactable object to the interactables array.
+      public void NewInteractable(int iID, String name)
+      {
+         Interactable i = new Interactable(iID, name);
+         interactables.Add(i);
+      }
 
-            // loops to verify correct location
-            foreach (Location l in locations)
-            {
-               if (l.locID != currentLoc) { continue; }
-               else
-               {
-                  if (takeAction[1] != -1)
-                  {
-                     l.setPrompt(newPrompt);
-                  }
-                  l.ReadPrompt();
-                  input = Console.ReadLine();
-                  takeAction = l.TakeAction(Int32.Parse(input), actionCounter);
-                  actionCounter = actionCounter + takeAction[0];
+      // most common and simplified decision, leads to a new prompt, default 1 action
+      public void AddDecision(Interactable i, int dID, String dText, int ltpid)
+      {
+         Decision d = new Decision(dID, dText, ltpid);
+         i.decisions.Add(d);
+      }
 
-                  // if takeAction[1] != 1, decision made was a leave action
-                  // directs to the new location for next loop
-                  if (takeAction[1] != -1)
-                  {
-                     currentLoc = takeAction[1];
-                     newPrompt = takeAction[2];
-                  }
-                  break; // location found, no need to keep going
-               }
-            } // End of foreach
-         } // end of game loop
-      } // end of main
+      // most common and simplified decision, leads to a new prompt, nondefault actioncount
+      public void AddDecision(Interactable i, int dID, String dText, int leadsTo, int aCount)
+      {
+         Decision d = new Decision(dID, dText, leadsTo, aCount);
+         i.decisions.Add(d);
+      }
+
+      // specifies the decision is leaving an interactable
+      public void AddDecision(Interactable i, int dID, String dText, int ltpid, int aCount, int leavingI)
+      {
+         Decision d = new Decision(dID, dText, aCount, leavingI);
+         i.decisions.Add(d);
+      }
+
+      // specifies the decision is leaving an area
+      public void AddDecision(Interactable i, int dID, String dText, int aCount, int[] leavingA)
+      {
+         Decision d = new Decision(dID, dText, aCount, leavingA);
+         i.decisions.Add(d);
+      }
+
+      // assigns a prompt to the promp array of the apt interactable
+      public void AddPrompt(Interactable i, int pID, String pText, int[] dIDs)
+      {
+         Prompt p = new Prompt(pID, pText, dIDs);
+         i.prompts.Add(p);
+      }
    }
 }
